@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | Haris Yoonus & Co</title>
+    <meta name="description" content="Reach out to Haris Yoonus & Co for a consultation regarding your tax, auditing, and financial advisory needs. Based in Perinthalmanna, Kerala.">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span>HY</span><span>& Co</span>
+            </a>
+            <nav class="nav" id="nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About Us</a>
+                <a href="services.html" class="nav-link">Services</a>
+                <a href="contact.html" class="nav-link active">Contact</a>
+                <a href="contact.html" class="btn btn-primary">Book Consultation</a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
+                <i class="ph ph-list"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="section section-bg" style="padding-top: 140px; padding-bottom: 60px;">
+        <div class="container">
+            <div class="text-center animate-on-scroll">
+                <h1 class="h1" style="font-size: 3rem;">Get in Touch</h1>
+                <p class="lead">Schedule your consultation today. Let our experts guide you through the intricacies of compliant financial growth.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Info & Form -->
+    <section class="section">
+        <div class="container grid grid-2 gap-8">
+            <!-- Contact Details -->
+            <div class="animate-on-scroll">
+                <h2 class="h2">Have questions? Let's connect.</h2>
+                <p style="color: var(--text-muted); margin-bottom: 32px; font-size: 1.125rem;">Whether you are looking to start a new business, file your taxes correctly, or conduct a full statutory audit, our team is directly accessible.</p>
+                
+                <div style="display: flex; gap: 24px; margin-bottom: 32px; align-items: flex-start;">
+                    <div style="background: var(--primary-light); padding: 16px; border-radius: 50%; color: var(--primary);">
+                        <i class="ph ph-map-pin" style="font-size: 24px;"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.25rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 8px;">Office Address</h4>
+                        <p style="color: var(--text-muted);">Perinthalmanna,<br>Malappuram, Kerala</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 24px; margin-bottom: 32px; align-items: flex-start;">
+                    <div style="background: var(--primary-light); padding: 16px; border-radius: 50%; color: var(--primary);">
+                        <i class="ph ph-phone" style="font-size: 24px;"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.25rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 8px;">Call Us</h4>
+                        <p style="color: var(--text-muted);"><a href="tel:+918075613936" style="color: inherit;">+91 80756 13936</a></p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 24px; margin-bottom: 32px; align-items: flex-start;">
+                    <div style="background: var(--primary-light); padding: 16px; border-radius: 50%; color: var(--primary);">
+                        <i class="ph ph-envelope-simple" style="font-size: 24px;"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.25rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 8px;">Email Address</h4>
+                        <p style="color: var(--text-muted);"><a href="mailto:ca.hyandco@gmail.com" style="color: inherit;">ca.hyandco@gmail.com</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="card animate-on-scroll delay-100">
+                <h3 class="h3" style="margin-bottom: 24px;">Send a Message</h3>
+                <form action="#" method="POST">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" required placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="service" class="form-label">Service Required</label>
+                        <select id="service" name="service" class="form-control" style="appearance: none;">
+                            <option value="">Select Service</option>
+                            <option value="tax">Income Tax Advisory</option>
+                            <option value="gst">GST Registration/Return</option>
+                            <option value="company">Company Formation</option>
+                            <option value="audit">Audit & Assurance</option>
+                            <option value="other">Other Consulting</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message" class="form-label">Message/Query</label>
+                        <textarea id="message" name="message" class="form-control" required placeholder="How can we help you?"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Request</button>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 16px; text-align: center;">We aim to respond within 24 business hours.</p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="section section-bg" style="padding: 0;">
+        <div style="width: 100%; height: 450px; background: #e5e7eb;">
+            <!-- Simple generic map for Perinthalmanna Kerala as a placeholder until specific API key is integrated -->
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15664.717641217034!2d76.22305!3d10.97025!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba7cca32b217e99%3A0xc6cb12bdf78fcde6!2sPerinthalmanna%2C%20Kerala!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" 
+                width="100%" 
+                height="100%" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section">
+        <div class="container">
+            <div class="text-center animate-on-scroll">
+                <h2 class="h2">Frequently Asked Questions</h2>
+                <p class="lead">Common queries regarding our taxation and compliance procedures.</p>
+            </div>
+            
+            <div style="max-width: 800px; margin: 48px auto 0;">
+                <div class="faq-item animate-on-scroll">
+                    <button class="faq-question">
+                        <span>When should I file my Income Tax Return (ITR)?</span>
+                        <i class="ph ph-caret-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            For individuals who are not liable for tax audits, the usual due date is July 31st of the Assessment Year. For entities requiring a tax audit, it generally extends to October 31st. We recommend starting the process well in advance to ensure thorough review.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="faq-item animate-on-scroll">
+                    <button class="faq-question">
+                        <span>Is GST Registration mandatory for my business?</span>
+                        <i class="ph ph-caret-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            GST registration is generally mandatory if your aggregate annual turnover exceeds ₹40 Lakhs (for goods) or ₹20 Lakhs (for services) in normal states. Some special category states have lower thresholds. However, certain inter-state businesses and e-commerce sellers require mandatory registration regardless of turnover.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item animate-on-scroll">
+                    <button class="faq-question">
+                        <span>What structures are suitable for a Startup: Pvt Ltd, LLP, or Proprietorship?</span>
+                        <i class="ph ph-caret-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            If you plan to raise equity capital from investors, a Private Limited Company is strictly necessary. For bootstrapped businesses with multiple partners where limited liability is desired but flexibility is preferred, an LLP is excellent. A Sole Proprietorship is fastest to set up for independent small ventures but offers zero liability protection.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="faq-item animate-on-scroll">
+                    <button class="faq-question">
+                        <span>Can NRIs utilize your services without physically visiting India?</span>
+                        <i class="ph ph-caret-down faq-icon"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            Yes, absolutely. We use modern cloud-based secure channels to receive your documents, finalize your assessments, and digitally sign returns. You never need to be physically present in our office to ensure complete Indian tax compliance.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/918075613936" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
+        <i class="ph-fill ph-whatsapp-logo"></i>
+    </a>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-col">
+                    <a href="index.html" class="logo" style="color: white; margin-bottom: 24px; display: inline-flex;">
+                        <span style="color: var(--accent);">HY</span><span>& Co</span>
+                    </a>
+                    <p style="color: rgba(255,255,255,0.7); max-width: 300px;">Trusted Financial & Tax Advisors providing dedicated CPA services to individuals and businesses across India.</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="services.html">Services</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Services</h4>
+                    <ul class="footer-links">
+                        <li><a href="services.html">Income Tax</a></li>
+                        <li><a href="services.html">GST Compliance</a></li>
+                        <li><a href="services.html">Audit & Assurance</a></li>
+                        <li><a href="services.html">Company Registration</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Contact Us</h4>
+                    <ul class="footer-links">
+                        <li style="display: flex; gap: 8px;"><i class="ph ph-map-pin" style="margin-top: 4px; color: var(--accent);"></i> <span>Perinthalmanna, Malappuram,<br>Kerala</span></li>
+                        <li style="display: flex; gap: 8px;"><i class="ph ph-phone" style="margin-top: 4px; color: var(--accent);"></i> <a href="tel:+918075613936">+91 80756 13936</a></li>
+                        <li style="display: flex; gap: 8px;"><i class="ph ph-envelope-simple" style="margin-top: 4px; color: var(--accent);"></i> <a href="mailto:ca.hyandco@gmail.com">ca.hyandco@gmail.com</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year"></span> Haris Yoonus & Co. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>
