@@ -1,0 +1,8 @@
+uploads encryption
+document deletion option in ADMIN IMPERSONATION MODE.
+FY suggestion while typing, ensure a common format.
+sorted in general document  first, rest FY wise
+wording in sored vault, password etc...
+interactive side bar.
+date format dd/mm/yyyy
+logging out of ADMIN IMPERSONATION MODE of a user, admin should be logged in.

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Haris Yoonus & Co</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        body { margin: 0; background: var(--bg-secondary); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { transition: width 0.3s ease; width: 260px; background: var(--primary-dark); color: white; display:flex; flex-direction: column; flex-shrink: 0; overflow-x: hidden;}
+        .sidebar.collapsed { width: 72px; }
+        .sidebar.collapsed .sidebar-txt { display: none; }
+        .sidebar.collapsed .sidebar-logo { padding: 24px 0; justify-content: center; }
+        .sidebar.collapsed .nav-item { padding: 16px 0; justify-content: center; }
+        .sidebar-logo { padding: 24px; font-size: 1.5rem; font-weight:700; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; display:flex; justify-content:space-between; align-items:center; }
+        .nav-item { padding: 16px 24px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; border-left: 4px solid transparent; white-space: nowrap; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); }
+        .nav-item.active { background: var(--primary); border-left-color: white; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative;}
+        .top-header { background: white; padding: 20px 40px; box-shadow: var(--shadow-sm); display:flex; justify-content:space-between; align-items: center;}
+        .content-section { display: none; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .content-section.active { display: block; }
+        
+        .report-frame { width: 100%; height: calc(100vh - 250px); border: none; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); background: white;}
+        .data-card { background: white; border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px;}
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .data-table th { color: var(--text-muted); font-weight: 500; font-size: 0.875rem; }
+        
+        .impersonate-banner { background: #f59e0b; color: white; padding: 8px 16px; display:flex; justify-content:space-between; align-items:center; font-weight: bold; position: sticky; top:0; z-index: 100;}
+        .exit-btn { background: white; color: #f59e0b; border:none; padding:4px 12px; border-radius:4px; font-weight:bold; cursor:pointer;}
+        
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content:center; align-items:center; }
+        .modal { background: white; padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 500px; position:relative; max-height:90vh; overflow-y:auto;}
+        .modal-close { position:absolute; top:20px; right:20px; cursor:pointer; font-size:1.5rem; color:var(--text-muted); }
+        
+        .dynamic-field { display: none; margin-top: 12px; }
+        .dynamic-field.active { display: block; }
+
+        .group-header { background: #f1f5f9; padding: 12px 16px; font-weight: 600; font-size: 1rem; color: var(--primary-dark); margin-top: 24px; border-radius:4px;}
+        .delete-btn { color: #ef4444; cursor: pointer; padding: 4px 8px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <span class="sidebar-txt">HY & Co <span style="font-size:0.875rem; display:block; font-weight:normal; color:#94a3b8;">Portal</span></span>
+            <i class="ph ph-list" style="cursor:pointer; font-size:1.5rem;" onclick="toggleSidebar()"></i>
+        </div>
+        <div style="flex:1; padding-top:24px;">
+            <div class="nav-item active" data-target="dashboard"><i class="ph ph-squares-four" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Overview</span></div>
+            <div class="nav-item" data-target="reports" id="navReports"><i class="ph ph-chart-bar" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Reports</span></div>
+            <div class="nav-item" data-target="documents"><i class="ph ph-folder" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Client Documents</span></div>
+            <div class="nav-item" data-target="credentials"><i class="ph ph-shield-check" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Secure Vault</span></div>
+        </div>
+        <div class="nav-item" id="logoutBtn" style="border-top: 1px solid rgba(255,255,255,0.1);"><i class="ph ph-sign-out" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Logout</span></div>
+    </nav>
+
+    <div class="main-content">
+        <div id="impersonateBanner" class="impersonate-banner" style="display:none;">
+            <span><i class="ph ph-mask-happy"></i> ADMIN IMPERSONATION MODE ACTIVE</span>
+            <button class="exit-btn" onclick="exitImpersonation()"><i class="ph ph-arrow-left"></i> Exit to Panel</button>
+        </div>
+        <header class="top-header">
+            <h2 class="h2" style="margin:0; font-size:1.5rem;" id="pageTitle">Dashboard Overview</h2>
+            <div class="user-greeting" id="greeting" style="font-weight:600; color:var(--primary-dark);">Loading...</div>
+        </header>
+
+        <!-- DASHBOARD TAB -->
+        <main id="dashboard" class="content-section active">
+            <h3 class="h3">Welcome to your secure portal!</h3>
+            <div class="grid grid-3">
+                <div class="card" style="align-items:center; text-align:center; cursor:pointer;" onclick="switchTab('documents')">
+                    <div class="card-icon" style="margin: 0 auto 16px;"><i class="ph ph-file-text"></i></div>
+                    <div class="h2" id="docCount">0</div>
+                    <p class="text-muted">Client Documents</p>
+                </div>
+                <div class="card" style="align-items:center; text-align:center; cursor:pointer;" onclick="switchTab('credentials')">
+                    <div class="card-icon" style="margin: 0 auto 16px;"><i class="ph ph-shield-check"></i></div>
+                    <div class="h2" id="credCount">0</div>
+                    <p class="text-muted">Secure Vault</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- REPORTS TAB -->
+        <main id="reports" class="content-section">
+            <h3 class="h3" style="margin-bottom:24px;">Reports Shared With Me</h3>
+            <div id="reportContainer"></div>
+        </main>
+
+        <!-- DOCUMENTS TAB -->
+        <main id="documents" class="content-section">
+            <div class="data-card" style="box-shadow:none; padding:0; background:transparent;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h3 class="h3" style="margin:0;">Client Documents</h3>
+                        <p class="text-muted">Access encrypted files securely assigned to your profile.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openUploadModal()">Add Document <i class="ph ph-plus"></i></button>
+                </div>
+                <div id="documentGroups"></div>
+            </div>
+        </main>
+
+        <!-- CREDENTIALS TAB -->
+        <main id="credentials" class="content-section">
+            <div class="data-card">
+                <h3 class="h3">Secure Vault</h3>
+                <p class="text-muted" style="margin-bottom:24px;">Military-grade vaulted platform accesses maintained by the firm.</p>
+                <table class="data-table">
+                    <thead><tr><th>Access Platform</th><th>Identifier ID</th><th>Saved Credential</th><th>Last Monitored</th></tr></thead>
+                    <tbody id="credTableBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Datalist Autocomplete Reference -->
+    <datalist id="fyList">
+        <option value="FY 2022-23">
+        <option value="FY 2023-24">
+        <option value="FY 2024-25">
+        <option value="FY 2025-26">
+        <option value="FY 2026-27">
+    </datalist>
+
+    <!-- UPLOAD MODAL -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <i class="ph ph-x modal-close" onclick="closeUploadModal()"></i>
+            <h3 class="h3" style="margin-bottom: 24px;">Upload Document</h3>
+            <form id="uploadForm">
+                <label class="form-label">Document Category</label>
+                <select id="docCategory" class="form-control" style="margin-bottom:16px;" required>
+                    <option value="">Select Category...</option>
+                    <option value="ITR-V">ITR-V</option>
+                    <option value="AR">Audit Report</option>
+                    <option value="FS">Financial Statements</option>
+                    <option value="PAN & ID Proofs">PAN & ID Proofs</option>
+                    <option value="GST Returns">GST Returns</option>
+                    <option value="Bank Statements">Bank Statements</option>
+                    <option value="Other Documents">Other Documents</option>
+                </select>
+
+                <!-- DYNAMIC FIELDS -->
+                <div id="field-fy" class="dynamic-field">
+                    <label class="form-label">Financial Year</label>
+                    <input type="text" id="docFy" class="form-control" list="fyList" placeholder="e.g. FY 2023-24">
+                </div>
+                <div id="field-bank" class="dynamic-field">
+                    <label class="form-label">Bank Name</label>
+                    <input type="text" id="docBank" class="form-control" placeholder="e.g. HDFC Bank">
+                    <label class="form-label" style="margin-top:12px;">Account Number</label>
+                    <input type="text" id="docAcc" class="form-control">
+                    <label class="form-label" style="margin-top:12px;">Period</label>
+                    <input type="text" id="docPeriod" class="form-control" placeholder="e.g. April 23 - March 24">
+                </div>
+                <div id="field-id" class="dynamic-field">
+                    <label class="form-label">ID Type</label>
+                    <select id="docIdType" class="form-control">
+                        <option value="PAN">PAN Card</option>
+                        <option value="Aadhar">Aadhar Card</option>
+                        <option value="Passport">Passport</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <label class="form-label" style="margin-top:16px;">Select File</label>
+                <input type="file" id="docFile" class="form-control" style="background:white; padding:8px;" required>
+
+                <label class="form-label" style="margin-top:16px;">Description (Optional)</label>
+                <input type="text" id="docDesc" class="form-control" placeholder="Any extra notes">
+
+                <button type="submit" class="btn btn-primary" id="uploadBtn" style="width:100%; margin-top:24px;">Secure & Vault Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let clientDataStore = null;
+
+        function switchTab(targetId) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            
+            const navItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+            if(navItem) navItem.classList.add('active');
+            
+            document.getElementById(targetId).classList.add('active');
+            
+            const titles = { dashboard: "Dashboard Overview", reports: "Financial Reports", documents: "Client Documents", credentials: "Secure Vault" };
+            document.getElementById('pageTitle').textContent = titles[targetId];
+        }
+
+        document.querySelectorAll('.nav-item[data-target]').forEach(item => {
+            item.addEventListener('click', () => switchTab(item.dataset.target));
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = 'login.html';
+        });
+
+        async function exitImpersonation() {
+            const res = await fetch('/api/admin/exit-impersonation', {method: 'POST'});
+            if(res.ok) window.location.href = 'admin.html';
+            else { alert('Failed to restore admin context.'); window.location.href = 'login.html'; }
+        }
+
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('collapsed');
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/client-dashboard');
+                if (res.status === 401 || res.status === 403) { window.location.href = 'login.html'; return; }
+                const data = await res.json();
+                clientDataStore = data;
+
+                document.getElementById('greeting').innerText = data.user.name;
+                if(data.user.isImpersonating) document.getElementById('impersonateBanner').style.display = 'flex';
+
+                document.getElementById('docCount').textContent = data.documents.length;
+                document.getElementById('credCount').textContent = data.credentials.length;
+
+                if (!data.powerbi_url) {
+                    document.getElementById('navReports').style.display = 'none';
+                } else {
+                    document.getElementById('navReports').style.display = 'flex';
+                    document.getElementById('reportContainer').innerHTML = `<iframe class="report-frame" src="${data.powerbi_url}" allowFullScreen="true"></iframe>`;
+                }
+
+                renderDocuments(data.documents, data.user);
+                renderCredentials(data.credentials);
+
+            } catch (err) { console.error(err); }
+        }
+
+        function renderDocuments(documents, userContext) {
+            const container = document.getElementById('documentGroups');
+            if(documents.length === 0) { container.innerHTML = '<div class="data-card" style="text-align:center;">No documents available in vault.</div>'; return; }
+
+            const groups = { "General Documents": [] };
+            
+            documents.forEach(d => {
+                if (d.financial_year) {
+                    const key = d.financial_year;
+                    if(!groups[key]) groups[key] = [];
+                    groups[key].push(d);
+                } else {
+                    groups["General Documents"].push(d);
+                }
+            });
+
+            // Reconstruct array to force General Documents first, then sort FY keys alphabetically/desc
+            const sortedGroupNames = Object.keys(groups).filter(k => k !== "General Documents").sort().reverse();
+            // Prefix general documents so it is at index 0 explicitly
+            const orderedGroups = ["General Documents", ...sortedGroupNames];
+
+            let html = '';
+            for(const groupName of orderedGroups) {
+                const docs = groups[groupName];
+                if (docs.length === 0) continue; // Skip empty blocks
+
+                html += `<div class="group-header"><i class="ph ${groupName === 'General Documents' ? 'ph-folder-open' : 'ph-calendar-blank'}"></i> ${groupName}</div>
+                         <div class="data-card" style="padding:0; margin-top:8px;">
+                            <table class="data-table">
+                                <thead><tr><th>Date</th><th>Category</th><th>Details</th><th>File</th><th>Action</th></tr></thead>
+                                <tbody>`;
+                
+                docs.forEach(d => {
+                    let subDetails = '';
+                    if(d.bank_name) subDetails += `Bank: ${d.bank_name} <br>`;
+                    if(d.bank_account) subDetails += `Acc: ${d.bank_account} <br>`;
+                    if(d.bank_period) subDetails += `Period: ${d.bank_period} <br>`;
+                    if(d.id_proof_type) subDetails += `${d.id_proof_type} <br>`;
+                    if(d.description) subDetails += `Note: ${d.description}`;
+
+                    let deleteHtml = '';
+                    // Allow deletion if uploaded in session OR if Admin is impersonating
+                    if (userContext.isImpersonating || d.session_id === userContext.session_id) {
+                        deleteHtml = `<button class="delete-btn" onclick="deleteDoc(${d.id})"><i class="ph ph-trash"></i> Drop</button>`;
+                    }
+
+                    // Format date exactly as DD/MM/YYYY
+                    const standardDate = new Date(d.upload_date).toLocaleDateString('en-GB');
+
+                    html += `<tr>
+                                <td>${standardDate}</td>
+                                <td><span style="background:var(--bg-secondary); padding:4px 8px; border-radius:4px; font-size:0.8rem;">${d.category}</span></td>
+                                <td style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">${subDetails || '-'}</td>
+                                <td><i class="ph ph-lock-key" style="color:var(--text-muted);" title="File AES Encrypted"></i> ${d.original_name}</td>
+                                <td style="display:flex; gap:8px;">
+                                    <a href="/api/documents/${d.id}/download" target="_blank" class="btn btn-secondary" style="padding:4px 12px; font-size:0.875rem;"><i class="ph ph-download-simple"></i> Download</a>
+                                    ${deleteHtml}
+                                </td>
+                            </tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        async function deleteDoc(id) {
+            if(!confirm("Are you certain you wish to delete this credential/document? Cannot be undone.")) return;
+            const res = await fetch(`/api/documents/${id}`, { method: 'DELETE' });
+            if(res.ok) loadData(); else alert('Deletion lock enforced. Session block active.');
+        }
+
+        function renderCredentials(creds) {
+            const credTable = document.getElementById('credTableBody');
+            if(creds.length === 0) credTable.innerHTML = '<tr><td colspan="4" style="text-align:center;">Vault empty</td></tr>';
+            else {
+                credTable.innerHTML = creds.map((c, idx) => {
+                    const standardDate = new Date(c.last_updated).toLocaleDateString('en-GB');
+                    return `
+                    <tr>
+                        <td style="font-weight:600;">${c.platform_name}</td>
+                        <td>${c.username}</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="password" id="pswd_${idx}" value="${c.password}" readonly style="border:none; background:transparent; font-family:monospace; margin:0; padding:0; width:120px; outline:none;" />
+                                <button class="btn btn-secondary" style="padding:2px 8px; font-size:12px;" onclick="togglePswd('pswd_${idx}')">Reveal</button>
+                                <button class="btn btn-secondary" style="padding:2px 8px; font-size:12px;" onclick="copyPswd('${c.password}')"><i class="ph ph-copy"></i></button>
+                            </div>
+                            <div style="color:var(--text-muted); font-size:0.75rem; margin-top:4px;">Notes: ${c.notes || '-'}</div>
+                        </td>
+                        <td>${standardDate}</td>
+                    </tr>`
+                }).join('');
+            }
+        }
+
+        function togglePswd(id) { const input = document.getElementById(id); input.type = input.type === 'password' ? 'text' : 'password'; }
+        function copyPswd(text) { navigator.clipboard.writeText(text); alert('Copied to clipboard!'); }
+
+        // Modal Logic
+        function openUploadModal() { document.getElementById('uploadModal').style.display = 'flex'; }
+        function closeUploadModal() { document.getElementById('uploadModal').style.display = 'none'; }
+        
+        document.getElementById('docCategory').addEventListener('change', (e) => {
+            document.querySelectorAll('.dynamic-field').forEach(f => f.classList.remove('active'));
+            const val = e.target.value;
+            if (['ITR-V', 'AR', 'FS', 'GST Returns'].includes(val)) document.getElementById('field-fy').classList.add('active');
+            else if (val === 'Bank Statements') document.getElementById('field-bank').classList.add('active');
+            else if (val === 'PAN & ID Proofs') document.getElementById('field-id').classList.add('active');
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('uploadBtn');
+            btn.innerHTML = 'Encrypting & Uploading...'; btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('category', document.getElementById('docCategory').value);
+            formData.append('description', document.getElementById('docDesc').value);
+            formData.append('file', document.getElementById('docFile').files[0]);
+            
+            // Append dynamics
+            if(document.getElementById('field-fy').classList.contains('active')) formData.append('financial_year', document.getElementById('docFy').value);
+            if(document.getElementById('field-bank').classList.contains('active')){
+                formData.append('bank_name', document.getElementById('docBank').value);
+                formData.append('bank_account', document.getElementById('docAcc').value);
+                formData.append('bank_period', document.getElementById('docPeriod').value);
+            }
+            if(document.getElementById('field-id').classList.contains('active')) formData.append('id_proof_type', document.getElementById('docIdType').value);
+
+            try {
+                const res = await fetch('/api/documents', { method: 'POST', body: formData });
+                if(res.ok) {
+                    alert('Document Encrypted and Vaulted Successfully!');
+                    document.getElementById('uploadForm').reset();
+                    document.querySelectorAll('.dynamic-field').forEach(f => f.classList.remove('active'));
+                    closeUploadModal();
+                    loadData();
+                } else alert('Upload failed');
+            } catch(e) { alert('Error uploading. Note: Very large files must be encrypted incrementally.'); }
+            
+            btn.innerHTML = 'Secure & Vault Upload'; btn.disabled = false;
+        });
+
+        loadData();
+    </script>
+</body>
+</html>

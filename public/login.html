@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Haris Yoonus & Co</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-light) 100%);
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            padding: 48px;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 450px;
+            box-shadow: var(--shadow-card);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .login-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        .login-logo span { color: var(--primary); }
+        .error-msg {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            margin-bottom: 24px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <a href="index.html" class="login-logo"><span>HY</span>& Co</a>
+                <p class="text-muted">Secure Client Portal</p>
+            </div>
+            
+            <div id="errorBox" class="error-msg"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" required placeholder="client@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Sign In</button>
+            </form>
+            
+            <div class="text-center" style="margin-top: 24px;">
+                <a href="index.html" style="font-size: 0.875rem; color: var(--text-muted);"><i class="ph ph-arrow-left"></i> Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorBox = document.getElementById('errorBox');
+
+            errorBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    errorBox.textContent = data.error || 'Login failed';
+                    errorBox.style.display = 'block';
+                } else {
+                    // Redirect based on role
+                    if (data.role === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                }
+            } catch (err) {
+                errorBox.textContent = 'Network error. Please try again later.';
+                errorBox.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

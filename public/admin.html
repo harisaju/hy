@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Admin Control | HY & Co</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        body { margin: 0; background: var(--bg-secondary); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { transition: width 0.3s ease; width: 280px; background: var(--primary-dark); color: white; display:flex; flex-direction: column; flex-shrink: 0; overflow-x: hidden; z-index:100;}
+        .sidebar.collapsed { width: 72px; }
+        .sidebar.collapsed .sidebar-txt { display: none; }
+        .sidebar.collapsed .sidebar-logo { padding: 32px 0; align-items: center; }
+        .sidebar.collapsed .nav-item { padding: 16px 0; justify-content: center; }
+        
+        .sidebar-logo { padding: 32px 24px; font-size: 1.5rem; font-weight:700; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; display:flex; flex-direction: column; }
+        .nav-item { padding: 16px 24px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; border-left: 4px solid transparent; white-space: nowrap; font-weight: 500;}
+        .nav-item:hover { background: rgba(255,255,255,0.05); }
+        .nav-item.active { background: var(--primary); border-left-color: white; }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative;}
+        .top-header { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top:0; z-index:50;}
+        
+        .admin-workspace { padding: 40px; max-width: 1400px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 32px;}
+        .view-section { display: none; animation: fadeIn 0.3s forwards; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .admin-card { background: white; border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05); }
+        .card-header { border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 16px; margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;}
+        .card-header h3 { margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; color: var(--primary-dark); }
+        
+        .client-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
+        .client-table th, .client-table td { padding: 16px 24px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .client-table th { font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; background: #f8fafc; }
+        .client-table tr:hover td { background: #f8fafc; }
+        
+        .badge { background: var(--primary-light); color: var(--primary); padding: 4px 12px; border-radius: var(--radius-full); font-weight: 600; font-size: 0.75rem; display: inline-block; white-space:nowrap;}
+        
+        .input-group { margin-bottom: 16px; }
+        input[type="text"], input[type="email"], input[type="password"], select { width: 100%; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: var(--radius-md); font-family: inherit; font-size: 0.875rem; background: #f8fafc; transition: 0.2s; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 0.875rem; color: var(--text-main); }
+        
+        .action-btn { background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 8px 16px; border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        
+        /* Modal Window Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; opacity:0; transition: opacity 0.3s; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-container { background: white; border-radius: var(--radius-lg); width: 100%; max-width: 500px; box-shadow: var(--shadow-card); transform: scale(0.95); transition: transform 0.3s; padding: 40px; }
+        .modal-overlay.active .modal-container { transform: scale(1); }
+
+        /* Management Station Layout */
+        .mgmt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+        .mgmt-panel { background: white; padding: 24px; border-radius: var(--radius-md); border: 1px solid rgba(0,0,0,0.05); box-shadow: var(--shadow-sm);}
+        .mgmt-panel h4 { margin: 0 0 16px 0; font-size: 1.125rem; color: var(--primary-dark); display:flex; align-items:center; gap:8px;}
+        
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="ph ph-activity" id="collapsedLogo" style="display:none; color:var(--primary); font-size:2rem;"></i>
+            <div class="sidebar-txt">
+                <span style="color:var(--primary-light); font-size:1.5rem; display:block;">HY & Co</span>
+                <span style="font-size:0.875rem; font-weight:normal; color:#94a3b8; margin-top:4px; display:block;">Enterprise Admin</span>
+            </div>
+        </div>
+        <div style="flex:1; padding-top:24px;">
+            <div class="nav-item active" data-target="viewRegistry"><i class="ph ph-users" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Clients Registry</span></div>
+            <div class="nav-item" data-target="viewSysOps"><i class="ph ph-hard-drives" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">System Operations</span></div>
+        </div>
+        <div class="nav-item" id="logoutBtn" style="border-top: 1px solid rgba(255,255,255,0.1);"><i class="ph ph-lock-key" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Secure Session Lock</span></div>
+    </nav>
+
+    <div class="main-content">
+        <header class="top-header">
+            <div style="display:flex; align-items:center; gap: 16px;">
+                <button class="action-btn" onclick="toggleSidebar()" style="padding: 8px 12px; border:none; box-shadow:var(--shadow-sm);"><i class="ph ph-list" style="font-size:1.25rem;"></i></button>
+                <h2 class="h2" style="margin:0; font-size:1.25rem; color:var(--primary-dark);"><i class="ph ph-shield-star" style="color:var(--primary);"></i> Master Control Dashboard</h2>
+            </div>
+            <div style="font-weight:600; font-size:0.875rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;"><i class="ph ph-circle" style="color:#22c55e;" weight="fill"></i> Root Access Verified</div>
+        </header>
+
+        <div class="admin-workspace">
+            
+            <!-- == VIEW 1: ACTIVE CLIENTS REGISTRY == -->
+            <div class="view-section active" id="viewRegistry">
+                <div class="admin-card" style="margin:0; padding:0; overflow:hidden;">
+                    <div class="card-header" style="border-bottom:1px solid rgba(0,0,0,0.05); padding:32px 32px 24px 32px; margin:0;">
+                        <h3><i class="ph ph-address-book"></i> Active Clients Registry</h3>
+                        <button class="btn btn-primary" onclick="openProvisionModal()" style="padding: 8px 16px; font-size:0.875rem; border-radius:var(--radius-md);"><i class="ph ph-plus"></i> Provision New Client</button>
+                    </div>
+                    <table class="client-table">
+                        <thead>
+                            <tr>
+                                <th style="padding-left:32px;">Client Identity</th>
+                                <th>Portal Login ID</th>
+                                <th style="padding-right:32px; text-align:right;">Vault Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientTableBody">
+                            <tr><td colspan="3" style="text-align:center; padding:32px;">Connecting to secure registry...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- == VIEW 2: MANAGEMENT STATION (HIDDEN BY DEFAULT) == -->
+            <div class="view-section" id="viewMgmt">
+                <div class="admin-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:24px;">
+                        <div>
+                            <h2 class="h2" style="margin:0 0 8px 0; font-size:1.75rem;"><i class="ph ph-terminal-window"></i> Client Master Interface</h2>
+                            <span class="badge" style="font-size:0.875rem; background:#f1f5f9; color:var(--text-muted); border:1px solid #cbd5e1;">Target Entity: <span id="mgmtClientName" style="color:var(--primary-dark);"></span></span>
+                        </div>
+                        <button class="action-btn" onclick="closeMgmt()" style="padding:10px 20px; border-radius:var(--radius-full);"><i class="ph ph-arrow-left"></i> Return to Registry</button>
+                    </div>
+                    
+                    <div class="mgmt-grid">
+                        <!-- 1. Power BI Hook -->
+                        <div class="mgmt-panel">
+                            <h4><i class="ph ph-chart-line-up"></i> Bind PowerBI Feed</h4>
+                            <p class="text-muted" style="margin-bottom:24px; font-size:0.875rem;">Push a live Microsoft PowerBI URL securely into the client's reporting dashboard.</p>
+                            <input type="hidden" id="credEmailUrl">
+                            <input type="hidden" id="clientIdUrl">
+                            <div class="input-group">
+                                <label class="form-label">Live Embed URL</label>
+                                <input type="text" id="powerBiUrlInput" placeholder="https://app.powerbi.com/view?r=...">
+                            </div>
+                            <button onclick="updateUrl()" class="btn btn-secondary" style="width:100%; border-color:var(--primary); color:var(--primary);"><i class="ph ph-link"></i> Push URL Integration</button>
+                        </div>
+
+                        <!-- 2. Secure Vault Credential Injection -->
+                        <div class="mgmt-panel">
+                            <h4><i class="ph ph-shield-check"></i> Inject Vault Credential</h4>
+                            <p class="text-muted" style="margin-bottom:24px; font-size:0.875rem;">Passwords pass through AES-256 Symmetric Cipher before resting natively in the database.</p>
+                            <form id="credForm">
+                                <input type="hidden" id="credEmail">
+                                <div class="input-group">
+                                    <label class="form-label">Firm/Platform Name</label>
+                                    <input type="text" id="credPlat" placeholder="e.g. ITR Filing Portal" required>
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Client Identifier / ID</label>
+                                    <input type="text" id="credUser" required>
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Raw Password</label>
+                                    <input type="password" id="credPass" required placeholder="Strictly Encrypted Storage">
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Auditor Notes</label>
+                                    <input type="text" id="credNotes">
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width:100%;"><i class="ph ph-lock-key"></i> Lock & Vault</button>
+                            </form>
+                        </div>
+
+                        <!-- 3. Document Streamer -->
+                        <div class="mgmt-panel">
+                            <h4><i class="ph ph-file-arrow-up"></i> Stream Secure Document</h4>
+                            <p class="text-muted" style="margin-bottom:24px; font-size:0.875rem;">Uploading creates a mathematically scrambled `.enc` copy via hardware streaming locks.</p>
+                            <form id="docForm">
+                                <input type="hidden" id="docEmail">
+                                <div class="input-group">
+                                    <label class="form-label">Compliance Category</label>
+                                    <select id="docCat" required>
+                                        <option value="ITR-V">ITR-V</option>
+                                        <option value="AR">Audit Report</option>
+                                        <option value="FS">Financial Statements</option>
+                                        <option value="PAN & ID Proofs">PAN & ID Proofs</option>
+                                        <option value="GST Returns">GST Returns</option>
+                                        <option value="Bank Statements">Bank Statements</option>
+                                        <option value="Other Documents">Other Documents</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Financial Target (Optional)</label>
+                                    <input type="text" id="docFy" list="fyListAdmin" placeholder="e.g. FY 2023-24">
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Physical Payload</label>
+                                    <input type="file" id="docFile" style="background:#fff; padding:6px;" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="docBtn" style="width:100%;"><i class="ph ph-upload-simple"></i> Encrypt & Push Data</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- == VIEW 3: SYSTEM OPERATIONS == -->
+            <div class="view-section" id="viewSysOps">
+                <div class="admin-card" style="border-left:4px solid #ef4444;">
+                    <div class="card-header" style="border:none; padding:0;">
+                        <h3><i class="ph ph-cpu"></i> Server Operations Matrix</h3>
+                    </div>
+                    <p class="text-muted" style="margin-bottom:32px;">Advanced node execution panels for hardware-level database administration.</p>
+                    <div style="background:#fef2f2; padding:32px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; border: 1px solid #fee2e2;">
+                        <div>
+                            <h4 style="margin:0 0 12px 0; color:#b91c1c; font-size:1.125rem;"><i class="ph ph-warning-circle"></i> Offline Disaster Recovery Protocol</h4>
+                            <p style="margin:0; font-size:0.875rem; color:#991b1b; max-width:600px;">If the SQLite database corrupts or wipes, this protocol reverse-engineers document configurations purely from reading internal AES-256 `.meta` hardware vaults.</p>
+                        </div>
+                        <button class="btn" style="background:#ef4444; color:white; font-weight:bold; padding:12px 24px; border:none; border-radius:var(--radius-md); box-shadow:0 4px 12px rgba(239,68,68,0.3);" onclick="runRecovery()"><i class="ph ph-lifebuoy"></i> Execute Integrity Sweep</button>
+                    </div>
+                    <div id="recoveryStats" style="margin-top:24px; font-weight:600; font-size:1rem;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PROVISIONING MODAL -->
+    <div class="modal-overlay" id="provisionModal">
+        <div class="modal-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h3 style="margin:0; color:var(--primary-dark); display:flex; align-items:center; gap:8px;"><i class="ph ph-user-plus"></i> Provision Account</h3>
+                <button class="action-btn" onclick="closeProvisionModal()" style="border:none; background:transparent; padding:4px;"><i class="ph ph-x" style="font-size:1.5rem;"></i></button>
+            </div>
+            
+            <form id="createClientForm">
+                <div class="input-group">
+                    <label class="form-label">Client Display Name</label>
+                    <input type="text" id="cName" placeholder="e.g. Acme Corp" required>
+                </div>
+                <div class="input-group">
+                    <label class="form-label">Email (Platform Login ID)</label>
+                    <input type="email" id="cEmail" placeholder="client@acme.com" required>
+                </div>
+                <div class="input-group" style="margin-bottom:32px;">
+                    <label class="form-label">Temporary Initialization Password</label>
+                    <input type="password" id="cPassword" placeholder="Strictly secured" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="ph ph-key"></i> Provision Secure Account</button>
+            </form>
+            <div id="cMsg" style="margin-top: 16px; font-weight: bold; font-size:0.875rem; text-align:center;"></div>
+        </div>
+    </div>
+
+    <datalist id="fyListAdmin">
+        <option value="FY 2022-23">
+        <option value="FY 2023-24">
+        <option value="FY 2024-25">
+        <option value="FY 2025-26">
+    </datalist>
+
+    <script>
+        // SPA View Controller
+        document.querySelectorAll('.nav-item[data-target]').forEach(item => {
+            item.addEventListener('click', () => {
+                // Update Nav States
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Hide All Views
+                document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+                // Show Target
+                const target = item.getAttribute('data-target');
+                document.getElementById(target).classList.add('active');
+            });
+        });
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('collapsed');
+            document.getElementById('collapsedLogo').style.display = sb.classList.contains('collapsed') ? 'block' : 'none';
+        }
+
+        // Modal Controls
+        function openProvisionModal() {
+            document.getElementById('provisionModal').classList.add('active');
+        }
+        function closeProvisionModal() {
+            document.getElementById('provisionModal').classList.remove('active');
+            document.getElementById('createClientForm').reset();
+            document.getElementById('cMsg').innerHTML = '';
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = 'login.html';
+        });
+
+        let clientCache = [];
+
+        async function loadClients() {
+            try {
+                const res = await fetch('/api/admin/clients');
+                if (res.status === 401 || res.status === 403) { window.location.href = 'login.html'; return; }
+                clientCache = await res.json();
+                const tbody = document.getElementById('clientTableBody');
+                
+                if (clientCache.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:32px;">No provisioning configurations found in the registry.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = clientCache.map(c => `
+                    <tr>
+                        <td style="padding-left:32px;">
+                            <div style="font-weight:600; font-size:1rem; color:var(--primary-dark);">${c.name}</div>
+                        </td>
+                        <td><span class="badge" style="background:#f1f5f9; color:var(--text-muted); font-weight:500;">${c.email}</span></td>
+                        <td style="padding-right:32px; text-align:right;">
+                            <button class="action-btn" title="Open Admin Client Tunnel" onclick="openMgmt(${c.id})"><i class="ph ph-faders"></i> Manage Client Context</button>
+                            <button class="action-btn" title="Login as Client (Impersonate)" onclick="impersonate('${c.email}')" style="margin-left:8px;"><i class="ph ph-mask-happy"></i> Tunnel Login</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        // Mgmt Station
+        function openMgmt(id) {
+            const c = clientCache.find(x => x.id === id);
+            if (!c) return;
+            
+            // Switch current active view overriding Nav states manually
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById('viewMgmt').classList.add('active');
+            
+            // Un-highlight nav bars
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+            // Map Identity
+            document.getElementById('mgmtClientName').textContent = c.name + " (" + c.email + ")";
+            document.getElementById('clientIdUrl').value = c.id;
+            document.getElementById('powerBiUrlInput').value = c.powerbi_url || '';
+            document.getElementById('credEmail').value = c.email;
+            document.getElementById('docEmail').value = c.email;
+            
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+        
+        function closeMgmt() {
+            // Revert back to Registry
+            document.getElementById('viewMgmt').classList.remove('active');
+            document.getElementById('viewRegistry').classList.add('active');
+            
+            // Reset nav bar active
+            document.querySelector('.nav-item[data-target="viewRegistry"]').classList.add('active');
+        }
+
+        async function updateUrl() {
+            const id = document.getElementById('clientIdUrl').value;
+            const url = document.getElementById('powerBiUrlInput').value;
+            const btn = event.target.closest('button');
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Pushing...`;
+            
+            const res = await fetch(`/api/admin/clients/${id}`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ powerbi_url: url })
+            });
+            if (res.ok) {
+                const cIndex = clientCache.findIndex(x => x.id == id);
+                if (cIndex > -1) clientCache[cIndex].powerbi_url = url;
+                btn.innerHTML = `<i class="ph ph-check"></i> Connected Successfully`;
+                btn.style.background = '#dcfce7'; btn.style.color = '#166534'; btn.style.borderColor = '#bbf7d0';
+                setTimeout(() => { btn.innerHTML = ogHtml; btn.style=''; }, 2000);
+            } else {
+                alert('API Layer failed to save.');
+                btn.innerHTML = ogHtml;
+            }
+        }
+
+        async function impersonate(email) {
+            if(!confirm(`System will securely vault current Admin identity and spawn isolated tunnel as ${email}. Continue?`)) return;
+            const res = await fetch(`/api/admin/impersonate/${email}`, { method: 'POST' });
+            if(res.ok) window.location.href = 'dashboard.html';
+            else alert('Failed to successfully tunnel context switch.');
+        }
+
+        // Create Client API Execute
+        document.getElementById('createClientForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('cMsg');
+            const data = {
+                name: document.getElementById('cName').value, email: document.getElementById('cEmail').value,
+                password: document.getElementById('cPassword').value, powerbi_url: ''
+            };
+            const btn = e.target.querySelector('button');
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Provisioning...`; btn.disabled = true;
+            
+            const res = await fetch('/api/admin/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            btn.innerHTML = ogHtml; btn.disabled = false;
+            
+            if (res.ok) { 
+                msg.style.color = 'green'; msg.innerHTML = '<i class="ph ph-check-circle"></i> Database Account Generated!'; 
+                loadClients();
+                setTimeout(()=> closeProvisionModal(), 1500);
+            } 
+            else { const resData = await res.json(); msg.style.color = 'red'; msg.textContent = resData.error || 'Server rejected creation'; }
+        });
+
+        // Add Credential
+        document.getElementById('credForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                client_email: document.getElementById('credEmail').value, platform_name: document.getElementById('credPlat').value,
+                username: document.getElementById('credUser').value, password: document.getElementById('credPass').value,
+                notes: document.getElementById('credNotes').value
+            };
+            const btn = e.target.querySelector('button');
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Encrypting...`; btn.disabled = true;
+
+            const res = await fetch('/api/credentials', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)});
+            if(res.ok) { 
+                btn.innerHTML = `<i class="ph ph-check"></i> Locked in Vault`; 
+                btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a';
+                setTimeout(() => { btn.innerHTML = ogHtml; btn.style=''; btn.disabled=false; document.getElementById('credForm').reset();}, 2000);
+            }
+            else { alert('AES Cipher rejected credential'); btn.innerHTML = ogHtml; btn.disabled=false;}
+        });
+
+        // Upload Document
+        document.getElementById('docForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('docBtn'); 
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Engaging Cryptography...'; btn.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('client_email', document.getElementById('docEmail').value);
+            formData.append('category', document.getElementById('docCat').value);
+            formData.append('financial_year', document.getElementById('docFy').value); 
+            formData.append('file', document.getElementById('docFile').files[0]);
+
+            const res = await fetch('/api/documents', { method: 'POST', body: formData });
+            if(res.ok) { 
+                btn.innerHTML = '<i class="ph ph-check"></i> AES Secured & Stored';
+                btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a';
+                setTimeout(() => { btn.innerHTML = ogHtml; btn.style=''; btn.disabled=false; document.getElementById('docForm').reset();}, 2000);
+            } else { alert('Server blocked metadata layer upload'); btn.innerHTML = ogHtml; btn.disabled=false; }
+        });
+
+        // Disaster Recovery Action
+        async function runRecovery() {
+            if(!confirm("Are you verifying root access to execute physical hardware layer sweeps?")) return;
+            const stats = document.getElementById('recoveryStats');
+            stats.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Breaking logic locks and reverse-engineering matrices...';
+            stats.style.color = '#f59e0b';
+            
+            const res = await fetch('/api/admin/system/disaster-recovery', { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                stats.innerHTML = `<i class="ph ph-check-circle"></i> Sweep Validated. Discovered & Re-Mapped ${data.recoveredCount} orphaned signatures natively.`;
+                stats.style.color = '#16a34a';
+            } else {
+                stats.innerHTML = '<i class="ph ph-warning"></i> Hardware layer sweep halted securely.';
+                stats.style.color = '#dc2626';
+            }
+        }
+
+        loadClients();
+    </script>
+</body>
+</html>
