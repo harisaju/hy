@@ -351,4 +351,8 @@ app.put('/api/credentials/:id', authenticateToken, requireAdmin, (req, res) => {
     db.run(query, params, function(err) { res.json({message: 'Updated'}); });
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+if (process.env.VERCEL) {
+    module.exports = app;
+} else {
+    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+}
