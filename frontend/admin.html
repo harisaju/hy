@@ -73,12 +73,15 @@
             <div class="nav-item" data-target="viewSysOps"><i class="ph ph-hard-drives" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">System Operations</span></div>
         </div>
         <div class="nav-item" id="logoutBtn" style="border-top: 1px solid rgba(255,255,255,0.1);"><i class="ph ph-lock-key" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Secure Session Lock</span></div>
+        <div class="nav-item" onclick="toggleSidebar()" style="border-top: 1px solid rgba(255,255,255,0.1); justify-content: center; opacity: 0.6;" title="Collapse Sidebar">
+            <i class="ph ph-caret-left" id="collapseIcon" style="font-size: 1.25rem; transition: transform 0.3s ease;"></i>
+            <span class="sidebar-txt" style="font-size:0.75rem;">Collapse</span>
+        </div>
     </nav>
 
     <div class="main-content">
         <header class="top-header">
             <div style="display:flex; align-items:center; gap: 16px;">
-                <button class="action-btn" onclick="toggleSidebar()" style="padding: 8px 12px; border:none; box-shadow:var(--shadow-sm);"><i class="ph ph-list" style="font-size:1.25rem;"></i></button>
                 <h2 class="h2" style="margin:0; font-size:1.25rem; color:var(--primary-dark);"><i class="ph ph-shield-star" style="color:var(--primary);"></i> Master Control Dashboard</h2>
             </div>
             <div style="font-weight:600; font-size:0.875rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;"><i class="ph ph-circle" style="color:#22c55e;" weight="fill"></i> Root Access Verified</div>
@@ -188,6 +191,25 @@
                                 <button type="submit" class="btn btn-primary" id="docBtn" style="width:100%;"><i class="ph ph-upload-simple"></i> Encrypt & Push Data</button>
                             </form>
                         </div>
+
+                        <!-- 4. Reset Client Password -->
+                        <div class="mgmt-panel">
+                            <h4><i class="ph ph-password"></i> Reset Client Password</h4>
+                            <p class="text-muted" style="margin-bottom:24px; font-size:0.875rem;">Override the client's login password. They will need to use the new credentials on their next login.</p>
+                            <form id="resetPwForm">
+                                <input type="hidden" id="resetPwClientId">
+                                <div class="input-group">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" id="resetPwNew" placeholder="Min 6 characters" required minlength="6">
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Confirm New Password</label>
+                                    <input type="password" id="resetPwConfirm" placeholder="Re-enter password" required minlength="6">
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="resetPwBtn" style="width:100%; background:#ef4444; box-shadow:0 4px 14px rgba(239,68,68,0.3);"><i class="ph ph-key"></i> Force Password Reset</button>
+                                <div id="resetPwMsg" style="margin-top:12px; font-weight:600; font-size:0.875rem; text-align:center;"></div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -267,7 +289,14 @@
         function toggleSidebar() {
             const sb = document.getElementById('sidebar');
             sb.classList.toggle('collapsed');
-            document.getElementById('collapsedLogo').style.display = sb.classList.contains('collapsed') ? 'block' : 'none';
+            const icon = document.getElementById('collapseIcon');
+            if (sb.classList.contains('collapsed')) {
+                icon.className = 'ph ph-caret-right';
+                document.getElementById('collapsedLogo').style.display = 'block';
+            } else {
+                icon.className = 'ph ph-caret-left';
+                document.getElementById('collapsedLogo').style.display = 'none';
+            }
         }
 
         // Modal Controls
@@ -332,6 +361,9 @@
             document.getElementById('powerBiUrlInput').value = c.powerbi_url || '';
             document.getElementById('credEmail').value = c.email;
             document.getElementById('docEmail').value = c.email;
+            document.getElementById('resetPwClientId').value = c.id;
+            document.getElementById('resetPwMsg').innerHTML = '';
+            document.getElementById('resetPwForm').reset();
             
             window.scrollTo({top:0, behavior:'smooth'});
         }
@@ -419,6 +451,34 @@
         });
 
         // Upload Document
+        // Reset Client Password (Admin)
+        document.getElementById('resetPwForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPw = document.getElementById('resetPwNew').value;
+            const confirmPw = document.getElementById('resetPwConfirm').value;
+            const msg = document.getElementById('resetPwMsg');
+            const clientId = document.getElementById('resetPwClientId').value;
+
+            if (newPw !== confirmPw) { msg.style.color = '#ef4444'; msg.textContent = 'Passwords do not match.'; return; }
+            if (newPw.length < 6) { msg.style.color = '#ef4444'; msg.textContent = 'Min 6 characters required.'; return; }
+
+            const btn = document.getElementById('resetPwBtn');
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Resetting...'; btn.disabled = true;
+
+            const res = await fetch(`/api/admin/clients/${clientId}/reset-password`, {
+                method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ newPassword: newPw })
+            });
+            if (res.ok) {
+                msg.style.color = '#16a34a'; msg.innerHTML = '<i class="ph ph-check-circle"></i> Password reset successfully!';
+                document.getElementById('resetPwForm').reset();
+            } else {
+                const data = await res.json();
+                msg.style.color = '#ef4444'; msg.textContent = data.error || 'Failed to reset password.';
+            }
+            btn.innerHTML = ogHtml; btn.disabled = false;
+        });
+
         document.getElementById('docForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('docBtn'); 

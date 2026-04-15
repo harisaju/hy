@@ -54,6 +54,7 @@
             <div class="nav-item" data-target="reports" id="navReports"><i class="ph ph-chart-bar" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Reports</span></div>
             <div class="nav-item" data-target="documents"><i class="ph ph-folder" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Client Documents</span></div>
             <div class="nav-item" data-target="credentials"><i class="ph ph-shield-check" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Secure Vault</span></div>
+            <div class="nav-item" data-target="account"><i class="ph ph-user-gear" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Account</span></div>
         </div>
         <div class="nav-item" id="logoutBtn" style="border-top: 1px solid rgba(255,255,255,0.1);"><i class="ph ph-sign-out" style="font-size: 1.25rem;"></i> <span class="sidebar-txt">Logout</span></div>
     </nav>
@@ -114,6 +115,30 @@
                     <thead><tr><th>Access Platform</th><th>Identifier ID</th><th>Saved Credential</th><th>Last Monitored</th></tr></thead>
                     <tbody id="credTableBody"></tbody>
                 </table>
+            </div>
+        </main>
+
+        <!-- ACCOUNT TAB -->
+        <main id="account" class="content-section">
+            <div class="data-card" style="max-width:520px;">
+                <h3 class="h3"><i class="ph ph-lock" style="color:var(--primary);"></i> Change Password</h3>
+                <p class="text-muted" style="margin-bottom:24px;">Enter your current password to verify your identity, then set a new password.</p>
+                <form id="changePwForm">
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" id="pwCurrent" class="form-control" required placeholder="Enter current password">
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label class="form-label">New Password</label>
+                        <input type="password" id="pwNew" class="form-control" required placeholder="Min 6 characters" minlength="6">
+                    </div>
+                    <div style="margin-bottom:24px;">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" id="pwConfirm" class="form-control" required placeholder="Re-enter new password" minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="changePwBtn" style="width:100%;"><i class="ph ph-key"></i> Update Password</button>
+                    <div id="changePwMsg" style="margin-top:16px; font-weight:600; font-size:0.875rem; text-align:center;"></div>
+                </form>
             </div>
         </main>
     </div>
@@ -191,7 +216,7 @@
             
             document.getElementById(targetId).classList.add('active');
             
-            const titles = { dashboard: "Dashboard Overview", reports: "Financial Reports", documents: "Client Documents", credentials: "Secure Vault" };
+            const titles = { dashboard: "Dashboard Overview", reports: "Financial Reports", documents: "Client Documents", credentials: "Secure Vault", account: "Account Settings" };
             document.getElementById('pageTitle').textContent = titles[targetId];
         }
 
@@ -386,6 +411,43 @@
         });
 
         loadData();
+
+        // Self-service Password Change
+        document.getElementById('changePwForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const current = document.getElementById('pwCurrent').value;
+            const newPw = document.getElementById('pwNew').value;
+            const confirm = document.getElementById('pwConfirm').value;
+            const msg = document.getElementById('changePwMsg');
+
+            if (newPw !== confirm) { msg.style.color = '#ef4444'; msg.textContent = 'New passwords do not match.'; return; }
+            if (newPw.length < 6) { msg.style.color = '#ef4444'; msg.textContent = 'Password must be at least 6 characters.'; return; }
+
+            const btn = document.getElementById('changePwBtn');
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Updating...'; btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/change-password', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ currentPassword: current, newPassword: newPw })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.style.color = '#16a34a';
+                    msg.innerHTML = '<i class="ph ph-check-circle"></i> ' + data.message;
+                    document.getElementById('changePwForm').reset();
+                } else {
+                    msg.style.color = '#ef4444';
+                    msg.textContent = data.error || 'Failed to change password.';
+                }
+            } catch (err) {
+                msg.style.color = '#ef4444';
+                msg.textContent = 'Network error. Please try again.';
+            }
+            btn.innerHTML = ogHtml; btn.disabled = false;
+        });
     </script>
 </body>
 </html>
